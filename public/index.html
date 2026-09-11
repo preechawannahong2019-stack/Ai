@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจัดการสำนวนการสอบสวน</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Login Page -->
+  <div id="loginPage" class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">📋</div>
+        <h1>ระบบจัดการสำนวนการสอบสวน</h1>
+        <p>กรุณาเข้าสู่ระบบ</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>ชื่อผู้ใช้</label>
+          <input type="text" id="loginUsername" required placeholder="กรอกชื่อผู้ใช้">
+        </div>
+        <div class="form-group">
+          <label>รหัสผ่าน</label>
+          <input type="password" id="loginPassword" required placeholder="กรอกรหัสผ่าน">
+        </div>
+        <div id="loginError" class="error-msg" style="display:none"></div>
+        <button type="submit" class="btn btn-primary btn-full">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="appPage" class="app-container" style="display:none">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-icon">📋</span>
+        <h2>สำนวนสอบสวน</h2>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" onclick="showPage('dashboard')" class="menu-link active" data-page="dashboard">
+          <span class="menu-icon">📊</span> แดชบอร์ด
+        </a></li>
+        <li><a href="#" onclick="showPage('cases')" class="menu-link" data-page="cases">
+          <span class="menu-icon">📁</span> คดีทั้งหมด
+        </a></li>
+        <li><a href="#" onclick="showPage('addCase')" class="menu-link" data-page="addCase">
+          <span class="menu-icon">➕</span> เพิ่มคดีใหม่
+        </a></li>
+        <li><a href="#" onclick="showPage('categories')" class="menu-link" data-page="categories">
+          <span class="menu-icon">🏷️</span> จัดการหมวดหมู่
+        </a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <span id="userFullname">ผู้ใช้</span>
+          <button onclick="logout()" class="btn btn-sm btn-outline">ออกจากระบบ</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <h2>สำนวนสอบสวน</h2>
+      <button onclick="logout()" class="btn btn-sm btn-outline">ออก</button>
+    </div>
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard -->
+      <div id="page-dashboard" class="page active">
+        <h2 class="page-title">📊 แดชบอร์ด</h2>
+        <div id="deadlineNotifications" class="deadline-notifications"></div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="card">
+          <h3>คดีล่าสุด</h3>
+          <div id="recentCases"></div>
+        </div>
+      </div>
+
+      <!-- Cases List -->
+      <div id="page-cases" class="page">
+        <div class="page-header">
+          <h2 class="page-title">📁 คดีทั้งหมด</h2>
+          <button onclick="showPage('addCase')" class="btn btn-primary">➕ เพิ่มคดีใหม่</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="ค้นหา เลขคดี / ชื่อผู้กล่าวหา / ผู้ต้องหา / ฐานความผิด..." oninput="debounceSearch()">
+          <select id="filterCategory" onchange="loadCases()">
+            <option value="">ทุกหมวดหมู่</option>
+          </select>
+          <select id="filterStatus" onchange="loadCases()">
+            <option value="">ทุกสถานะ</option>
+            <option value="อยู่ระหว่างสอบสวน">อยู่ระหว่างสอบสวน</option>
+            <option value="สอบสวนเสร็จสิ้น">สอบสวนเสร็จสิ้น</option>
+            <option value="ส่งอัยการ">ส่งอัยการ</option>
+            <option value="รอพิจารณา">รอพิจารณา</option>
+            <option value="ยุติการสอบสวน">ยุติการสอบสวน</option>
+          </select>
+        </div>
+        <div id="casesList" class="cases-list"></div>
+        <div id="casesPagination" class="pagination"></div>
+      </div>
+
+      <!-- Add/Edit Case -->
+      <div id="page-addCase" class="page">
+        <h2 class="page-title" id="caseFormTitle">➕ เพิ่มคดีใหม่</h2>
+        <form id="caseForm" class="case-form">
+          <input type="hidden" id="caseId">
+
+          <div class="form-section">
+            <h3>ข้อมูลคดี</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>เลขลำดับสำนวนการสอบสวน</label>
+                <input type="text" id="caseFileNumber" placeholder="เช่น 1">
+              </div>
+              <div class="form-group">
+                <label>เลขคดี</label>
+                <input type="text" id="caseNumber" placeholder="เช่น ท.1/2567">
+              </div>
+              <div class="form-group">
+                <label>เลขประจำวัน</label>
+                <input type="text" id="dailyNumber" placeholder="เช่น 8">
+              </div>
+              <div class="form-group">
+                <label>วันเดือนปี ของเลขประจำวัน</label>
+                <input type="datetime-local" id="dailyDate">
+              </div>
+              <div class="form-group">
+                <label>ฐานความผิด</label>
+                <input type="text" id="offenseBase" placeholder="เช่น ฉ้อโกง">
+              </div>
+              <div class="form-group">
+                <label>หมวดหมู่คดี</label>
+                <select id="caseCategory">
+                  <option value="">-- เลือกหมวดหมู่ --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>สถานะคดี</label>
+                <select id="caseStatus">
+                  <option value="อยู่ระหว่างสอบสวน">อยู่ระหว่างสอบสวน</option>
+                  <option value="สอบสวนเสร็จสิ้น">สอบสวนเสร็จสิ้น</option>
+                  <option value="ส่งอัยการ">ส่งอัยการ</option>
+                  <option value="รอพิจารณา">รอพิจารณา</option>
+                  <option value="ยุติการสอบสวน">ยุติการสอบสวน</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>วันเวลาเกิดเหตุ</label>
+                <input type="datetime-local" id="incidentDate">
+              </div>
+              <div class="form-group">
+                <label>สถานที่เกิดเหตุ</label>
+                <input type="text" id="incidentLocation" placeholder="เช่น แขวงห้วยขวาง เขตห้วยขวาง กทม.">
+              </div>
+              <div class="form-group full-width">
+                <label>ความเสียหาย</label>
+                <textarea id="damage" rows="3" placeholder="รายละเอียดความเสียหาย..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>ยศ พนักงานสอบสวน</label>
+                <input type="text" id="investigatorRank" placeholder="เช่น พ.ต.ท.">
+              </div>
+              <div class="form-group">
+                <label>ชื่อ-นามสกุล พนักงานสอบสวน</label>
+                <input type="text" id="investigator" placeholder="เช่น สมชาย ใจดี">
+              </div>
+              <div class="form-group">
+                <label>ผู้รับผิดชอบ</label>
+                <input type="text" id="responsibleOfficer" placeholder="ชื่อผู้รับผิดชอบ">
+              </div>
+              <div class="form-group full-width">
+                <label>หมายเหตุ</label>
+                <textarea id="notes" rows="3" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>ข้อมูลผู้กล่าวหา</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>ชื่อ-สกุล</label>
+                <input type="text" id="complainantName" placeholder="ชื่อผู้กล่าวหา">
+              </div>
+              <div class="form-group">
+                <label>เลขบัตรประชาชน</label>
+                <input type="text" id="complainantIdCard" placeholder="13 หลัก" maxlength="13">
+              </div>
+              <div class="form-group">
+                <label>โทรศัพท์</label>
+                <input type="text" id="complainantPhone" placeholder="0xx-xxx-xxxx">
+              </div>
+              <div class="form-group full-width">
+                <label>ที่อยู่</label>
+                <input type="text" id="complainantAddress" placeholder="ที่อยู่ผู้กล่าวหา">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>ข้อมูลผู้ต้องหา</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>ชื่อ-สกุล</label>
+                <input type="text" id="suspectName" placeholder="ชื่อผู้ต้องหา">
+              </div>
+              <div class="form-group">
+                <label>เลขบัตรประชาชน</label>
+                <input type="text" id="suspectIdCard" placeholder="13 หลัก" maxlength="13">
+              </div>
+              <div class="form-group">
+                <label>โทรศัพท์</label>
+                <input type="text" id="suspectPhone" placeholder="0xx-xxx-xxxx">
+              </div>
+              <div class="form-group full-width">
+                <label>ที่อยู่</label>
+                <input type="text" id="suspectAddress" placeholder="ที่อยู่ผู้ต้องหา">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>พฤติการณ์คดี</h3>
+            <div class="form-group">
+              <textarea id="caseBehavior" rows="6" placeholder="อธิบายพฤติการณ์ของคดี..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>สิ่งที่ได้ดำเนินการ</h3>
+            <div class="form-group">
+              <textarea id="actionsTaken" rows="4" placeholder="บันทึกสิ่งที่ได้ดำเนินการแล้ว..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">💾 บันทึก</button>
+            <button type="button" class="btn btn-outline" onclick="resetCaseForm()">ยกเลิก</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Case Detail -->
+      <div id="page-caseDetail" class="page">
+        <div class="page-header">
+          <h2 class="page-title" id="detailTitle">รายละเอียดคดี</h2>
+          <div class="detail-actions">
+            <button id="btnEditCase" onclick="editCurrentCase()" class="btn btn-primary">✏️ แก้ไข</button>
+            <button id="btnExportCase" onclick="exportCurrentCase()" class="btn btn-success">📥 ส่งออก</button>
+            <button id="btnDeleteCase" onclick="deleteCurrentCase()" class="btn btn-danger">🗑️ ลบ</button>
+            <button onclick="showPage('cases')" class="btn btn-outline">← กลับ</button>
+          </div>
+        </div>
+        <div id="caseDetailContent" class="detail-content"></div>
+      </div>
+
+      <!-- Categories -->
+      <div id="page-categories" class="page">
+        <h2 class="page-title">🏷️ จัดการหมวดหมู่</h2>
+        <div class="card">
+          <div class="form-inline">
+            <input type="text" id="newCategoryName" placeholder="ชื่อหมวดหมู่ใหม่">
+            <button onclick="addCategory()" class="btn btn-primary">➕ เพิ่ม</button>
+          </div>
+          <div id="categoriesList" class="categories-list"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

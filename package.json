@@ -1,0 +1,53 @@
+{
+  "name": "case-management",
+  "version": "1.0.0",
+  "description": "ระบบจัดการสำนวนการสอบสวน",
+  "main": "app.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "electron": "electron .",
+    "build:exe": "electron-builder --win"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.5-lts.1",
+    "sql.js": "^1.10.3"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.police.case-management",
+    "productName": "ระบบจัดการสำนวนการสอบสวน",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "app.js",
+      "server.js",
+      "db.js",
+      "public/**/*",
+      "assets/**/*",
+      "data/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ระบบจัดการสำนวนการสอบสวน"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# dependency & build
+node_modules/
+release/
+dist/
+
+# runtime data (database & uploaded files) - never commit these
+data/
+uploads/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# logs
+*.log
+logs/
+
+# env / secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
